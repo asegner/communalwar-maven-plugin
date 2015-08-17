@@ -1,0 +1,105 @@
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <description>ear repackaging plugin supporting communal and skinny wars</description>
+    <artifactId>communalwar-maven-plugin</artifactId>
+    <groupId>communalwar-maven-plugin</groupId>
+    <packaging>maven-plugin</packaging>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.compiler.target>1.8</java.compiler.target>
+
+        <apache.maven-plugin-api.version>3.0</apache.maven-plugin-api.version>
+        <apache.maven-plugin-annotations.version>3.2</apache.maven-plugin-annotations.version>
+        <apache.maven-plugin-plugin.version>3.3</apache.maven-plugin-plugin.version>
+        <junit.version>3.8.1</junit.version>
+        <maven-core.version>3.3.3</maven-core.version>
+        <commons-lang3.version>3.4</commons-lang3.version>
+        <commons-io.version>2.4</commons-io.version>
+        <plexus-archiver.version>2.3</plexus-archiver.version>
+        <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
+    </properties>
+
+    <dependencies>
+        <!-- Provided Scope -->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-core</artifactId>
+            <version>${maven-core.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- End Provided Scope -->
+
+        <dependency>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>maven-plugin-annotations</artifactId>
+            <version>${apache.maven-plugin-annotations.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
+            <version>${apache.maven-plugin-api.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons-io.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.plexus</groupId>
+            <artifactId>plexus-archiver</artifactId>
+            <version>${plexus-archiver.version}</version>
+        </dependency>
+
+        <!-- Test Scope -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- End Test Scope -->
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <version>${apache.maven-plugin-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>default-descriptor</id>
+                        <goals>
+                            <goal>descriptor</goal>
+                        </goals>
+                        <phase>process-classes</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>${java.compiler.target}</source>
+                    <target>${java.compiler.target}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
