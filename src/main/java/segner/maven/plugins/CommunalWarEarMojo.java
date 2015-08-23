@@ -138,8 +138,8 @@ public class CommunalWarEarMojo extends AbstractMojo {
                     }
                     warList.forEach(webmodule -> webmodule.removeLib(jarName));
 
-                } else {
-                    getLog().info(MSGINFO_SINGLE_LIBRARY_DEFINITION + jarName);
+                } else if (warList.size() == 1) {
+                    getLog().info(MSGINFO_SINGLE_LIBRARY_DEFINITION + jarName + " [" + warList.get(0).getName() + "]");
 
                 }
             } catch (Exception ex) {
