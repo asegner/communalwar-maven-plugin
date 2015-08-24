@@ -1,4 +1,4 @@
-package segner.maven.plugins;
+package net.segner.maven.plugins;
 
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.commons.lang3.StringUtils;
@@ -13,28 +13,30 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 import org.codehaus.plexus.util.FileUtils;
-import segner.maven.plugins.pojo.WebModule;
+import net.segner.maven.plugins.pojo.WebModule;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.*;
 
-
-@Mojo(name = "ear", defaultPhase = LifecyclePhase.PACKAGE, threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST)
+@Mojo(name = "ear", defaultPhase = LifecyclePhase.PACKAGE, threadSafe = false, requiresDependencyResolution = ResolutionScope.TEST)
 public class CommunalWarEarMojo extends AbstractMojo {
 
     public static final String TYPE_WEBMODULE = "war";
     public static final String TYPE_EARMODULE = "ear";
+    public static final List<String> ASPECTJLIBRARIES = Arrays.asList(StringUtils.split("aopalliance aspectjweaver aspectjrt"));
 
     public static final String MSGWARN_NOT_EXIST_BUILD_DIR = "Unpacked project EAR is missing in target folder. Run maven-ear-plugin first, unpacked.";
     public static final String MSGWARN_NOT_EXIST_COMMUNALBUNDLENAME = "No value for 'communalBundleName' - ignoring execution phase";
     public static final String MSGINFO_FOUND_UNPACKED_WEB_MODULE = "Found unpacked web module: ";
     public static final String MSGINFO_SKIPPING_EAR_FOLDER_ENTRY = "Skipping ear folder entry: ";
-    public static final String MSGINFO_SHARED_LIBRARY_MARKED_COMMUNAL = " * communal: ";
-    public static final String MSGINFO_SINGLE_LIBRARY_DEFINITION = "individual: ";
     public static final String MSGINFO_CREATING_SKINNY_WARS = "Creating skinny wars";
-    public static final String[] EARLIBRARIES = StringUtils.split("aopalliance aspectjweaver aspectjrt".toLowerCase());
+
+    public static final String MSGINFO_COMMUNAL_LIBRARY = " * communal: ";
+    public static final String MSGINFO_SINGLE_LIBRARY = "individual: ";
+    public static final String MSGINFO_PINNED_LIBRARY = "pinned: ";
+    public static final String MSGINFO_EAR_LIBRARY = "ear library: ";
 
     /**
      * The bundle name of the war to be used as the communal war. This expects an ear to have already been packaged.
@@ -50,17 +52,22 @@ public class CommunalWarEarMojo extends AbstractMojo {
     @Parameter(defaultValue = "true")
     protected Boolean forceAspectJLibToEar;
 
+    @Parameter(alias = "earLibraries")
+    protected List<Library> earLibraryList;
+
+    @Parameter(alias = "pinnedLibraries")
+    protected List<Library> pinnedLibraryList;
+
     @Parameter
     protected String classifier;
 
-    /**
-     * The maven project (effective pom)
-     */
     @Parameter(defaultValue = "${project}")
     protected MavenProject mavenProject;
 
     @Component
     private MavenProjectHelper projectHelper;
+
+    private List<Library> fullEarLibraryList;
 
     /**
      * The Jar archiver.
@@ -125,27 +132,51 @@ public class CommunalWarEarMojo extends AbstractMojo {
         final WebModule communalWar = warArtifacts.get(communalBundleName);
         jarMap.forEach((jarName, warList) -> {
             try {
-                if (forceAspectJLibToEar && StringUtils.startsWithAny(jarName.toLowerCase(), EARLIBRARIES)) {
-                    getLog().info("ear library: " + jarName);
+                if (isPinnedLibrary(jarName)) { // pinned library, do not move
+                    warList.forEach(war -> getLog().info(MSGINFO_PINNED_LIBRARY + jarName + " [" + war.getName() + "]"));
+
+                } else if (isEarLibrary(jarName)) { // ear library
+                    getLog().info(MSGINFO_EAR_LIBRARY + jarName);
                     FileUtils.copyFileToDirectory(new File(warList.get(0).getLibFolder(), jarName), new File(getEarTargetFolder(), "APP-INF/lib"));
                     warList.forEach(webmodule -> webmodule.removeLib(jarName));
 
-                } else if (warList.size() > 1) {
-                    getLog().info(MSGINFO_SHARED_LIBRARY_MARKED_COMMUNAL + jarName);
+                } else if (warList.size() > 1) { // communal library
+                    getLog().info(MSGINFO_COMMUNAL_LIBRARY + jarName);
                     boolean inCommunal = warList.removeIf(webModule -> webModule.getName().equals(communalBundleName));
                     if (!inCommunal) {
                         FileUtils.copyFileToDirectory(new File(warList.get(0).getLibFolder(), jarName), communalWar.getLibFolder());
                     }
                     warList.forEach(webmodule -> webmodule.removeLib(jarName));
 
-                } else if (warList.size() == 1) {
-                    getLog().info(MSGINFO_SINGLE_LIBRARY_DEFINITION + jarName + " [" + warList.get(0).getName() + "]");
-
+                } else if (warList.size() == 1) { // war library
+                    getLog().info(MSGINFO_SINGLE_LIBRARY + jarName + " [" + warList.get(0).getName() + "]");
                 }
             } catch (Exception ex) {
                 throw new RuntimeException(ex.getMessage(), ex);
             }
         });
+    }
+
+    private boolean isPinnedLibrary(String jarName) {
+        if (pinnedLibraryList != null) {
+            for (Library lib : pinnedLibraryList) {
+                if (lib.isMatch(jarName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isEarLibrary(String jarName) {
+        if (StringUtils.isNotBlank(jarName)) {
+            for (Library lib : fullEarLibraryList) {
+                if (lib.isMatch(jarName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void mergeModuleJarsIntoJarMap(Map<String, List<WebModule>> jarMap, WebModule module) {
@@ -191,8 +222,14 @@ public class CommunalWarEarMojo extends AbstractMojo {
      */
 
     protected void preExecuteCheck() throws IllegalArgumentException {
-        Validate.notBlank(communalBundleName, MSGWARN_NOT_EXIST_COMMUNALBUNDLENAME);
         Validate.isTrue(FileUtils.fileExists(getEarTargetFolder()), MSGWARN_NOT_EXIST_BUILD_DIR);
+        Validate.notBlank(communalBundleName, MSGWARN_NOT_EXIST_COMMUNALBUNDLENAME);
+
+        // construct list of ear libraries
+        fullEarLibraryList = new ArrayList<>(earLibraryList);
+        if (forceAspectJLibToEar) {
+            ASPECTJLIBRARIES.forEach(earLib -> fullEarLibraryList.add(new Library(earLib)));
+        }
 
         //TODO: unpack is just currently required, verify here that the  ear-plugin was executed and it uses unpack
     }

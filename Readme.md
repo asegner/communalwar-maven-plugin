@@ -24,6 +24,16 @@ After installing this plugin to the local maven repository, the calling project 
 
 ```
 
+Installing Plugin Locally
+--------------------------------------------------
+
+This plugin will be made available in maven central. However, to install locally without the use of maven central, simply download the project and build with
+the standard maven command shown below. This will make the plugin available in your local maven repository.
+
+```
+mvn clean install
+```
+
 Current assumptions
 --------------------------------------------------
 * The calling project pom is declaring all WebModules in maven-ear-plugin with unpack set to true
