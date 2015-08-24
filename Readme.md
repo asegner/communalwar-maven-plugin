@@ -1,13 +1,13 @@
-Skinny WARs with Skinny Configuration
-=================================================
+Skinny WARs with Skinny Configuration (and LTW Ready)
+=====================================================
 
-This maven plugin generates skinny wars to follow the EAR pattern discussed in [AspectJ LTW in WebLogic 12](https://github.com/asegner/spring-ltw-weblogic).
+This maven plugin generates skinny WARs intended to facilitate the EAR pattern discussed in [AspectJ LTW in WebLogic 12](https://github.com/asegner/spring-ltw-weblogic).
 Unlike the skinny war functionality built into maven-ear-plugin, this plugin requires very little configuration.
 
 After installing this plugin to the local maven repository, the calling project pom need only add the following section to its build plugins:
 ```xml
     <plugin>
-        <groupId>communalwar-maven-plugin</groupId>
+        <groupId>net.segner.maven.plugins</groupId>
         <artifactId>communalwar-maven-plugin</artifactId>
         <configuration>
             <communalWar>sharedwar.war</communalWar>
@@ -27,8 +27,8 @@ After installing this plugin to the local maven repository, the calling project 
 Installing Plugin Locally
 --------------------------------------------------
 
-This plugin will be made available in maven central. However, to install locally without the use of maven central, simply download the project and build with
-the standard maven command shown below. This will make the plugin available in your local maven repository.
+This plugin will soon be made available in maven central. Before that time, a local install can be run simply by downloading the project and building with
+the standard maven command shown below. This will install the plugin into your local maven repository
 
 ```
 mvn clean install
