@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>ear repackaging plugin supporting communal and skinny wars</description>
+    <description>ear repackaging plugin supporting LTW communal and skinny wars</description>
     <url>https://github.com/asegner/communalwar-maven-plugin</url>
 
     <artifactId>communalwar-maven-plugin</artifactId>
@@ -18,7 +18,7 @@
 
         <apache.maven-plugin-api.version>3.0</apache.maven-plugin-api.version>
         <apache.maven-plugin-annotations.version>3.2</apache.maven-plugin-annotations.version>
-        <apache.maven-plugin-plugin.version>3.3</apache.maven-plugin-plugin.version>
+        <apache.maven-plugin-plugin.version>3.4</apache.maven-plugin-plugin.version>
         <junit.version>3.8.1</junit.version>
         <maven-core.version>3.3.3</maven-core.version>
         <commons-lang3.version>3.4</commons-lang3.version>
@@ -93,6 +93,12 @@
                             <goal>descriptor</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>generated-helpmojo</id>
+                        <goals>
+                            <goal>helpmojo</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -106,6 +112,16 @@
             </plugin>
         </plugins>
     </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <version>${apache.maven-plugin-plugin.version}</version>
+            </plugin>
+        </plugins>
+    </reporting>
 
     <licenses>
         <license>

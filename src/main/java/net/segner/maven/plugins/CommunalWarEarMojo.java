@@ -13,7 +13,6 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 import org.codehaus.plexus.util.FileUtils;
-import net.segner.maven.plugins.pojo.WebModule;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -67,13 +66,10 @@ public class CommunalWarEarMojo extends AbstractMojo {
     @Component
     private MavenProjectHelper projectHelper;
 
-    private List<Library> fullEarLibraryList;
-
-    /**
-     * The Jar archiver.
-     */
     @Component(role = Archiver.class, hint = "jar")
     private JarArchiver jarArchiver;
+
+    private List<Library> fullEarLibraryList;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -99,9 +95,11 @@ public class CommunalWarEarMojo extends AbstractMojo {
         }
     }
 
+    /**
+     * This method's code might look similar to parts of maven-ear-plugin...
+     */
     private void repackageEar() throws IOException {
         File earFile = mavenProject.getArtifact().getFile();
-        getLog().debug("Jar archiver implementation [" + jarArchiver.getClass().getName() + "]");
         jarArchiver.setDestFile(earFile);
         jarArchiver.addDirectory(new File(getEarTargetFolder()));
         jarArchiver.createArchive();
@@ -130,31 +128,36 @@ public class CommunalWarEarMojo extends AbstractMojo {
 
         // migrate jars that are contained in more than one module
         final WebModule communalWar = warArtifacts.get(communalBundleName);
-        jarMap.forEach((jarName, warList) -> {
-            try {
-                if (isPinnedLibrary(jarName)) { // pinned library, do not move
-                    warList.forEach(war -> getLog().info(MSGINFO_PINNED_LIBRARY + jarName + " [" + war.getName() + "]"));
+        jarMap.forEach((jarName, warList) -> applyPackagingLayoutToJar(communalWar, jarName, warList));
+    }
 
-                } else if (isEarLibrary(jarName)) { // ear library
-                    getLog().info(MSGINFO_EAR_LIBRARY + jarName);
-                    FileUtils.copyFileToDirectory(new File(warList.get(0).getLibFolder(), jarName), new File(getEarTargetFolder(), "APP-INF/lib"));
-                    warList.forEach(webmodule -> webmodule.removeLib(jarName));
+    /**
+     * Applies the communal war packaging layout, providing an EAR layout that is LTW friendly
+     */
+    private void applyPackagingLayoutToJar(WebModule communalWar, String jarName, List<WebModule> warList) {
+        try {
+            if (isPinnedLibrary(jarName)) { // pinned library, do not move
+                warList.forEach(war -> getLog().info(MSGINFO_PINNED_LIBRARY + jarName + " [" + war.getName() + "]"));
 
-                } else if (warList.size() > 1) { // communal library
-                    getLog().info(MSGINFO_COMMUNAL_LIBRARY + jarName);
-                    boolean inCommunal = warList.removeIf(webModule -> webModule.getName().equals(communalBundleName));
-                    if (!inCommunal) {
-                        FileUtils.copyFileToDirectory(new File(warList.get(0).getLibFolder(), jarName), communalWar.getLibFolder());
-                    }
-                    warList.forEach(webmodule -> webmodule.removeLib(jarName));
+            } else if (isEarLibrary(jarName)) { // ear library
+                getLog().info(MSGINFO_EAR_LIBRARY + jarName);
+                FileUtils.copyFileToDirectory(new File(warList.get(0).getLibFolder(), jarName), new File(getEarTargetFolder(), "APP-INF/lib"));
+                warList.forEach(webmodule -> webmodule.removeLib(jarName));
 
-                } else if (warList.size() == 1) { // war library
-                    getLog().info(MSGINFO_SINGLE_LIBRARY + jarName + " [" + warList.get(0).getName() + "]");
+            } else if (warList.size() > 1) { // communal library
+                getLog().info(MSGINFO_COMMUNAL_LIBRARY + jarName);
+                boolean inCommunal = warList.removeIf(webModule -> webModule.getName().equals(communalBundleName));
+                if (!inCommunal) {
+                    FileUtils.copyFileToDirectory(new File(warList.get(0).getLibFolder(), jarName), communalWar.getLibFolder());
                 }
-            } catch (Exception ex) {
-                throw new RuntimeException(ex.getMessage(), ex);
+                warList.forEach(webmodule -> webmodule.removeLib(jarName));
+
+            } else if (warList.size() == 1) { // war library
+                getLog().info(MSGINFO_SINGLE_LIBRARY + jarName + " [" + warList.get(0).getName() + "]");
             }
-        });
+        } catch (Exception ex) {
+            throw new RuntimeException(ex.getMessage(), ex);
+        }
     }
 
     private boolean isPinnedLibrary(String jarName) {

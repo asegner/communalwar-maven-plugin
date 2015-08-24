@@ -5,6 +5,7 @@ This maven plugin generates skinny WARs intended to facilitate the EAR pattern d
 Unlike the skinny war functionality built into maven-ear-plugin, this plugin requires very little configuration.
 
 After installing this plugin to the local maven repository, the calling project pom need only add the following section to its build plugins:
+
 ```xml
     <plugin>
         <groupId>net.segner.maven.plugins</groupId>
@@ -24,17 +25,17 @@ After installing this plugin to the local maven repository, the calling project 
 
 ```
 
-Installing Plugin Locally
+
+## Installing Plugin Locally
 --------------------------------------------------
 
 This plugin will soon be made available in maven central. Before that time, a local install can be run simply by downloading the project and building with
 the standard maven command shown below. This will install the plugin into your local maven repository
 
-```
-mvn clean install
-```
+`$ mvn clean install`
 
-Current assumptions
+
+## Current assumptions
 --------------------------------------------------
 * The calling project pom is declaring all WebModules in maven-ear-plugin with unpack set to true
 ```xml
@@ -43,3 +44,30 @@ Current assumptions
     <unpack>true</unpack>
 </webModule>
 ```
+
+
+## Plugin Usage
+--------------------------------------------------
+
+* `communalWar`
+  * Name of the war module to treat as the communal war
+* `warningBreaksBuild`
+  * `true` | `false` (default: `true`)
+  * Force a warning to fail a build
+* `forceAspectJLibToEar`
+  * `true` | `false` (default: `true`)
+  * Add AspectJ related libraries to the ear libraries list below
+* `earLibraries`
+  * List of libraries that should be relocated to the EAR
+```xml
+<earLibraries>
+    <library><prefix>spring-webmvc</prefix></library>
+</earLibraries>
+```
+* `pinnedLibraries`
+  * List of libraries that should not be relocated. List should be specified in the same manner as ear libraries.
+
+
+## License
+--------------------------------------------------
+* [MIT License](http://www.opensource.org/licenses/mit-license.php)

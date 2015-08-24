@@ -1,4 +1,4 @@
-package net.segner.maven.plugins.pojo;
+package net.segner.maven.plugins;
 
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.commons.lang3.Validate;
