@@ -29,7 +29,20 @@ After installing this plugin to the local maven repository, the calling project 
 ## Installing Plugin Locally
 --------------------------------------------------
 
-This plugin will soon be made available in maven central. Before that time, a local install can be run simply by downloading the project and building with
+This plugin is currently in the snapshot repositories and will soon be promoted to the central repository. Before that time, the
+plugin can be downloaded by adding the snapshot repository to the project pom
+
+```xml
+    <pluginRepositories>
+    ...
+        <pluginRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </pluginRepository>
+    </pluginRepositories>
+```
+
+A local install can be run simply by downloading the project and building with
 the standard maven command shown below. This will install the plugin into your local maven repository
 
 `$ mvn clean install`
