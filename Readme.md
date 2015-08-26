@@ -13,6 +13,20 @@ After installing this plugin to the local maven repository, the calling project 
         <configuration>
             <communalWar>sharedwar.war</communalWar>
         </configuration>
+        <extensions>true</extensions>
+    </plugin>
+
+```
+
+Without setting extension to true, the plugin may still be used with the slightly more verbose:
+
+```xml
+    <plugin>
+        <groupId>net.segner.maven.plugins</groupId>
+        <artifactId>communalwar-maven-plugin</artifactId>
+        <configuration>
+            <communalWar>sharedwar.war</communalWar>
+        </configuration>
         <executions>
             <execution>
                 <phase>package</phase>
@@ -48,17 +62,6 @@ the standard maven command shown below. This will install the plugin into your l
 `$ mvn clean install`
 
 
-## Current assumptions
---------------------------------------------------
-* The calling project pom is declaring all WebModules in maven-ear-plugin with unpack set to true
-```xml
-<webModule>
-    ...
-    <unpack>true</unpack>
-</webModule>
-```
-
-
 ## Plugin Usage
 --------------------------------------------------
 
@@ -71,10 +74,10 @@ the standard maven command shown below. This will install the plugin into your l
   * `true` | `false` (default: `true`)
   * Add AspectJ related libraries to the ear libraries list below
 * `earLibraries`
-  * List of libraries that should be relocated to the EAR
+  * List of libraries that must be relocated to the EAR, if found (rarely needed)
 ```xml
 <earLibraries>
-    <library><prefix>spring-webmvc</prefix></library>
+    <libraryPrefixFilter>spring-webmvc spring-web-</libraryPrefixFilter>
 </earLibraries>
 ```
 * `pinnedLibraries`
