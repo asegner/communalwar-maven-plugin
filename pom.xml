@@ -68,6 +68,13 @@
             <version>${apache.maven-plugin-annotations.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j-api.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- End Provided Scope -->
 
         <dependency>
@@ -99,12 +106,6 @@
             <groupId>net.java.truecommons</groupId>
             <artifactId>truecommons-key-disable</artifactId>
             <version>${truecommons-key-disable.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j-api.version}</version>
         </dependency>
 
         <dependency>
