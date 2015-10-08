@@ -81,6 +81,7 @@
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
             <version>${apache.maven-plugin-api.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -100,12 +101,24 @@
             <artifactId>truevfs-profile-default</artifactId>
             <version>${truevfs-profile-default.version}</version>
             <type>pom</type>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jcl-over-slf4j</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
             <groupId>net.java.truecommons</groupId>
             <artifactId>truecommons-key-disable</artifactId>
             <version>${truecommons-key-disable.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>slf4j-api</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
