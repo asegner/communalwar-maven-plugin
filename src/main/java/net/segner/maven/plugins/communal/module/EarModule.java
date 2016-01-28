@@ -8,10 +8,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class EarModule extends GenericApplicationModule {
     private static final Logger logger = LoggerFactory.getLogger(EarModule.class);
@@ -23,14 +27,15 @@ public class EarModule extends GenericApplicationModule {
     private static final String[] EAR_METADATA_FILELIST = StringUtils.split("APP-INF META-INF".toLowerCase());
     private static final String MSGINFO_UNPACKED = " <unpacked>";
 
-    EarModule() {
+    EarModule(ApplicationModuleProvider applicationModuleProvider) {
+        this.applicationModuleProvider = applicationModuleProvider;
     }
 
-    public EarModule(String path) {
+    public EarModule(ApplicationModuleProvider applicationModuleProvider, String path) {
         super(path);
+        this.applicationModuleProvider = applicationModuleProvider;
     }
 
-    @Inject
     protected ApplicationModuleProvider applicationModuleProvider;
 
     @Override
@@ -65,34 +70,26 @@ public class EarModule extends GenericApplicationModule {
         Validate.isTrue((earFiles.size() + earFolders.size()) > 0, "Ear module should contain at least one application module");
 
         // create modules referenced in list
-        for (TFile moduleReference : earFiles) {
-            try {
-                // add internal ear module
-                GenericApplicationModule gam = applicationModuleProvider.get(moduleReference, this);
-                moduleNameToModuleMap.put(gam.getName(), gam);
-
-                if (logger.isInfoEnabled()) {
-                    logger.info(MSGINFO_FOUND_MODULE + gam.getName());
-                }
-            } catch (IllegalArgumentException | IllegalModuleException ex) {
-                logger.warn(MSGINFO_SKIPPING_EAR_FOLDER_ENTRY + moduleReference.getName());
-            }
-        }
+        createModule(earFiles, false);
 
         //create modules for any remaining unpacked modules
-        for (TFile moduleReference : earFolders) {
+        createModule(earFolders, true);
+    }
+
+    private void createModule(Collection<TFile> tfiles, boolean unpacked) throws IOException {
+        for (TFile moduleReference : tfiles) {
             try {
                 // add ear module
                 GenericApplicationModule gam = applicationModuleProvider.get(moduleReference, this);
                 moduleNameToModuleMap.put(gam.getName(), gam);
 
                 if (logger.isInfoEnabled()) {
-                    logger.info(MSGINFO_FOUND_MODULE + gam.getName() + MSGINFO_UNPACKED);
+                    logger.info(MSGINFO_FOUND_MODULE + gam.getName() + (unpacked ? MSGINFO_UNPACKED : StringUtils.EMPTY));
                 }
             } catch (IllegalArgumentException | IllegalModuleException ex) {
                 logger.warn(MSGINFO_SKIPPING_EAR_FOLDER_ENTRY + moduleReference.getName());
             }
         }
     }
-
 }
+

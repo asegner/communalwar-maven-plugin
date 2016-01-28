@@ -21,13 +21,14 @@ import java.io.IOException;
 @Named
 @Singleton
 public class ApplicationModuleProvider {
-    private static final Logger logger = LoggerFactory.getLogger(ApplicationModuleProvider.class);
-    public static final String MAVEN_EAR_PLUGIN = "org.apache.maven.plugins:maven-ear-plugin";
     public static final String MODULE_EXTENSION_EAR = ".ear";
+    public static final String MAVEN_EAR_PLUGIN = "org.apache.maven.plugins:maven-ear-plugin";
 
-    private Build mavenBuild;
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationModuleProvider.class);
+
     @Inject
-    private Provider<EarModule> earModuleProvider;
+    @Named("project.build")
+    private Build build;
     @Inject
     private Provider<WebModule> webModuleProvider;
     @Inject
@@ -72,25 +73,6 @@ public class ApplicationModuleProvider {
         return module;
     }
 
-    @Nonnull
-    public EarModule getEar() {
-        EarModule module = earModuleProvider.get();
-        String expectedEarPath = mavenBuild.getDirectory() + File.separator + mavenBuild.getFinalName() + MODULE_EXTENSION_EAR;
-        logger.debug("EAR file expected at: " + expectedEarPath);
-        module.init(expectedEarPath);
-
-        // find shared library path, otherwise default is used
-        Xpp3Dom earPluginConfig = (Xpp3Dom) mavenBuild.getPluginsAsMap().get(MAVEN_EAR_PLUGIN).getConfiguration();
-        Xpp3Dom child = earPluginConfig.getChild("defaultLibBundleDir");
-        if (child != null && StringUtils.isNotBlank(child.getValue())) {
-            String libraryFolder = child.getValue();
-            logger.debug("Using ear library folder from maven ear plugin definition: " + libraryFolder);
-            module.setLibraryPath(libraryFolder);
-        }
-
-        return module;
-    }
-
     @Nullable
     private GenericApplicationModule findByModuleExtension(TFile path) {
         if (StringUtils.equalsIgnoreCase(RarModule.EXTENSION, FilenameUtils.getExtension(path.getPath()))) {
@@ -120,7 +102,19 @@ public class ApplicationModuleProvider {
         return null;
     }
 
-    public void setMavenBuild(Build mavenBuild) {
-        this.mavenBuild = mavenBuild;
+    public EarModule getEar() {
+        String expectedEarPath = build.getDirectory() + File.separator + build.getFinalName() + MODULE_EXTENSION_EAR;
+        logger.debug("EAR file expected at: " + expectedEarPath);
+        EarModule module = new EarModule(this, expectedEarPath);
+
+        // find shared library path, otherwise default is used
+        Xpp3Dom earPluginConfig = (Xpp3Dom) build.getPluginsAsMap().get(MAVEN_EAR_PLUGIN).getConfiguration();
+        Xpp3Dom child = earPluginConfig.getChild("defaultLibBundleDir");
+        if (child != null && StringUtils.isNotBlank(child.getValue())) {
+            String libraryFolder = child.getValue();
+            logger.debug("Using ear library folder from maven ear plugin definition: " + libraryFolder);
+            module.setLibraryPath(libraryFolder);
+        }
+        return module;
     }
 }
