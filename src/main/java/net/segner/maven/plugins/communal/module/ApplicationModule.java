@@ -6,6 +6,7 @@ import net.java.truevfs.access.TFile;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.List;
+import java.util.jar.Manifest;
 
 
 public interface ApplicationModule {
@@ -32,4 +33,8 @@ public interface ApplicationModule {
     void removeLib(String libraryName) throws IOException;
 
     List<TFile> getLibraryFiles();
+
+    Manifest getManifest() throws IOException;
+
+    void saveManifest(Manifest manifest) throws IOException;
 }

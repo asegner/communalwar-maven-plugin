@@ -1,9 +1,12 @@
 package net.segner.maven.plugins.communal;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
 import com.google.inject.Provides;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
 import net.segner.maven.plugins.communal.enhancer.CommunalSkinnyWarEarEnhancer;
+import net.segner.maven.plugins.communal.enhancer.CommunalSkinnyWarEarEnhancerFactory;
 import net.segner.maven.plugins.communal.enhancer.ModuleEnhancer;
 import net.segner.maven.plugins.communal.enhancer.SkinnyWarEarEnhancer;
 import net.segner.maven.plugins.communal.enhancer.StandardlSkinnyWarEarEnhancer;
@@ -12,13 +15,10 @@ import net.segner.maven.plugins.communal.module.ApplicationModuleProvider;
 import net.segner.maven.plugins.communal.module.EarModule;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Build;
-import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import javax.inject.Provider;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,18 +60,22 @@ public class EarLayoutEnhancerModule extends AbstractModule {
         bind(Build.class)
                 .annotatedWith(Names.named("project.build"))
                 .toInstance(this.build);
+
+        install(new FactoryModuleBuilder()
+                .implement(ModuleEnhancer.class, CommunalSkinnyWarEarEnhancer.class)
+                .build(CommunalSkinnyWarEarEnhancerFactory.class));
     }
 
     @Nonnull
     @Provides
-    public EarModule earModule(ApplicationModuleProvider applicationModuleProvider){
+    public EarModule earModule(ApplicationModuleProvider applicationModuleProvider) {
         return applicationModuleProvider.getEar();
     }
 
 
     @Nonnull
     @Provides
-    public ModuleEnhancer<EarModule> earModuleEnhancer() {
+    public ModuleEnhancer<EarModule> earModuleEnhancer(CommunalSkinnyWarEarEnhancerFactory communalSkinnyWarEarEnhancerProvider, Provider<StandardlSkinnyWarEarEnhancer> standardlSkinnyWarEarEnhancerProvider) {
         // merge ear library list with aspectj list for the complete list
         List<LibraryFilter> fullEarLibraryList = new ArrayList<>(earLibraryList);
         if (forceAspectJLibToEar) {
@@ -80,8 +84,8 @@ public class EarLayoutEnhancerModule extends AbstractModule {
 
         // add skinny enhancer to enhancer chain
         SkinnyWarEarEnhancer skinnyEnhancer = StringUtils.isNotBlank(communalModuleName) ?
-                new CommunalSkinnyWarEarEnhancer(communalModuleName) :
-                new StandardlSkinnyWarEarEnhancer();
+                communalSkinnyWarEarEnhancerProvider.forCommunalName(communalModuleName) :
+                standardlSkinnyWarEarEnhancerProvider.get();
         skinnyEnhancer.setPinnedLibraries(pinnedLibraryList);
         skinnyEnhancer.setEarLibraries(fullEarLibraryList);
 

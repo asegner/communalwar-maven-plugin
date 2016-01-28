@@ -1,6 +1,8 @@
 package net.segner.maven.plugins.communal.module;
 
 import net.java.truevfs.access.TFile;
+import net.java.truevfs.access.TFileInputStream;
+import net.java.truevfs.access.TFileOutputStream;
 import net.segner.maven.plugins.communal.io.GenericMirroringFilesystem;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.Manifest;
 
 public abstract class GenericApplicationModule extends GenericMirroringFilesystem implements ApplicationModule {
 
@@ -117,5 +120,37 @@ public abstract class GenericApplicationModule extends GenericMirroringFilesyste
     @Override
     public void removeLib(String libraryName) throws IOException {
         rm(libLocation + File.separator + libraryName);
+    }
+
+    @Nonnull
+    private TFile getManifestTfile(boolean unpacked) {
+        return new TFile(unpacked ? getUnpackFolder() : getModuleRoot(), "META-INF/MANIFEST.MF");
+    }
+
+
+    @Override
+    @Nonnull
+    public Manifest getManifest() throws IOException {
+        TFile manifestTfile = getManifestTfile(false);
+        if (manifestTfile.exists() || manifestTfile.createNewFile()) {
+            try (TFileInputStream in = new TFileInputStream(manifestTfile)) {
+                return new Manifest(in);
+            }
+        }
+        throw new IOException("Unable to write manifest");
+    }
+
+    @Override
+    public void saveManifest(@Nonnull Manifest manifest) throws IOException {
+        TFile manifestTfile = getManifestTfile(false);
+        try (TFileOutputStream outputStream = new TFileOutputStream(manifestTfile)) {
+            manifest.write(outputStream);
+        }
+        if( isUnpacked() ){
+            manifestTfile = getManifestTfile(true);
+            try (TFileOutputStream outputStream = new TFileOutputStream(manifestTfile)) {
+                manifest.write(outputStream);
+            }
+        }
     }
 }

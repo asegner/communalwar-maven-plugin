@@ -1,5 +1,6 @@
 package net.segner.maven.plugins.communal.enhancer;
 
+import com.google.inject.name.Named;
 import net.java.truevfs.access.TFile;
 import net.segner.maven.plugins.communal.LibraryFilter;
 import net.segner.maven.plugins.communal.module.ApplicationModule;
@@ -9,20 +10,31 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 
 public abstract class SkinnyWarEarEnhancer extends AbstractEnhancer<EarModule> implements ModuleEnhancer<EarModule> {
     private static final Logger logger = LoggerFactory.getLogger(SkinnyWarEarEnhancer.class);
+
+    @Inject
+    @Named("warningBreaksBuild")
+    private Boolean warningBreaksBuild;
 
     public static final String MSGDEBUG_COMMUNAL_LIBRARY = " * skinny: ";
     public static final String MSGDEBUG_SINGLE_LIBRARY = "individual: ";
     public static final String MSGDEBUG_PINNED_LIBRARY = "pinned: ";
     public static final String MSGDEBUG_EAR_LIBRARY = "ear library: ";
     public static final String MSGINFO_SUCCESS = "Finished Layout";
+    public static final Attributes.Name ATTR_CLASSPATH = new Attributes.Name("Class-Path");
 
     private Map<String, List<ApplicationModule>> libraryMap;
     private List<LibraryFilter> pinnedLibraries;
@@ -57,7 +69,35 @@ public abstract class SkinnyWarEarEnhancer extends AbstractEnhancer<EarModule> i
         Validate.notNull(sharedModule, "Shared module not found: " + sharedModuleName);
         libraryMap.forEach((jarName, warList) -> applyPackagingLayoutToJar(sharedModule, jarName, warList));
 
-        //TODO modify manifest files to match new library locations
+        // build list of jars in shared module
+        // go through each module and add list to manifest class-path
+        Path moduleRootPath = getTargetModule().getModuleRoot().toPath();
+        List<String> sharedLibList = sharedModule.getLibraryFiles()
+                .stream()
+                .map(file -> {
+                    return moduleRootPath.relativize(file.toPath()).toString();
+                })
+                .collect(Collectors.toList());
+        earModules.forEach((name, module) -> {
+            Manifest manifest = null;
+            try {
+                logger.debug("Updating module manifest: " + module.getName());
+                manifest = module.getManifest();
+                List<String> classpath = parseClassPathAttribute(manifest);
+                classpath.addAll(0, sharedLibList);
+                manifest.getMainAttributes().put(ATTR_CLASSPATH, StringUtils.join(classpath, " "));
+                module.saveManifest(manifest);
+            } catch (IOException e) {
+                String msg = "Failed to write manifest for " + module.getName();
+                logger.warn(msg); //TODO respect warningBreaksBuild flag
+            }
+        });
+    }
+
+    private List<String> parseClassPathAttribute(Manifest manifest) {
+        Attributes attrs = manifest.getMainAttributes();
+        String classpath = attrs.containsKey(ATTR_CLASSPATH) ? attrs.getValue(ATTR_CLASSPATH) : StringUtils.EMPTY;
+        return new ArrayList<>(Arrays.asList(StringUtils.split(classpath, " ")));
     }
 
     private void mergeModuleLibrariesIntoMap(ApplicationModule containedModule) {

@@ -57,7 +57,7 @@ Without setting extension to true, the plugin may still be used with the slightl
 ## Installing Plugin Locally
 --------------------------------------------------
 
-This plugin requires a minimum maven version of 3.2.x. This plugin is currently in the snapshot repositories and will soon be promoted to the central repository.
+This plugin requires a minimum maven version of 3.3.x. This plugin is currently in the snapshot repositories and will soon be promoted to the central repository.
 Before that time, the plugin can be downloaded by adding the snapshot repository to the project pom
 
 ```xml

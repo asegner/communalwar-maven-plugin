@@ -41,6 +41,7 @@
         <truevfs-profile-default.version>0.11.0</truevfs-profile-default.version>
         <truecommons-key-disable.version>2.5.0</truecommons-key-disable.version>
         <jaxws-maven-plugin.version>2.3</jaxws-maven-plugin.version>
+        <guice.version>4.0</guice.version>
     </properties>
 
     <dependencyManagement>
@@ -87,7 +88,13 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>4.0</version>
+            <version>${guice.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-assistedinject</artifactId>
+            <version>${guice.version}</version>
         </dependency>
 
         <dependency>

@@ -1,5 +1,7 @@
 package net.segner.maven.plugins.communal.enhancer;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import net.segner.maven.plugins.communal.module.EarModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +13,8 @@ public class CommunalSkinnyWarEarEnhancer extends SkinnyWarEarEnhancer implement
 
     public static final String MSGINFO_CREATING_SKINNY_WARS = "Enhancing EAR with Communal Skinny WAR layout";
 
-    public CommunalSkinnyWarEarEnhancer(String communalBundleName) {
+    @Inject
+    public CommunalSkinnyWarEarEnhancer(@Assisted String communalBundleName) {
         setCommunalModule(communalBundleName);
     }
 
