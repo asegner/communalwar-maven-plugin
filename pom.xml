@@ -175,12 +175,15 @@
                             <goal>descriptor</goal>
                         </goals>
                     </execution>
-                    <!--<execution>-->
-                        <!--<id>generated-helpmojo</id>-->
-                        <!--<goals>-->
-                            <!--<goal>helpmojo</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
+                    <execution>
+                        <id>generated-helpmojo</id>
+                        <goals>
+                            <goal>helpmojo</goal>
+                        </goals>
+                        <configuration>
+                            <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
