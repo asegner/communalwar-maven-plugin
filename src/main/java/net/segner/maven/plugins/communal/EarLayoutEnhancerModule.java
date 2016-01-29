@@ -34,6 +34,7 @@ public class EarLayoutEnhancerModule extends AbstractModule {
     private Boolean generateWeblogicLtwMetadata;
     private Boolean warningBreaksBuild;
     private Build build;
+    private Boolean addToManifestClasspath;
 
 
     public EarLayoutEnhancerModule(String communalModuleName,
@@ -42,7 +43,8 @@ public class EarLayoutEnhancerModule extends AbstractModule {
                                    Boolean forceAspectJLibToEar,
                                    Boolean generateWeblogicLtwMetadata,
                                    Boolean warningBreaksBuild,
-                                   Build build) {
+                                   Build build,
+                                   Boolean addToManifestClasspath) {
         this.communalModuleName = communalModuleName;
         this.earLibraryList = earLibraryList;
         this.pinnedLibraryList = pinnedLibraryList;
@@ -50,6 +52,7 @@ public class EarLayoutEnhancerModule extends AbstractModule {
         this.generateWeblogicLtwMetadata = generateWeblogicLtwMetadata;
         this.warningBreaksBuild = warningBreaksBuild;
         this.build = build;
+        this.addToManifestClasspath = addToManifestClasspath;
     }
 
     @Override
@@ -57,10 +60,15 @@ public class EarLayoutEnhancerModule extends AbstractModule {
         bind(Boolean.class)
                 .annotatedWith(Names.named("warningBreaksBuild"))
                 .toInstance(this.warningBreaksBuild);
+        bind(Boolean.class)
+                .annotatedWith(Names.named("addToManifestClasspath"))
+                .toInstance(this.addToManifestClasspath);
+        bind(List.class)
+                .annotatedWith(Names.named("pinnedLibraryList"))
+                .toInstance(this.pinnedLibraryList);
         bind(Build.class)
                 .annotatedWith(Names.named("project.build"))
                 .toInstance(this.build);
-
         install(new FactoryModuleBuilder()
                 .implement(ModuleEnhancer.class, CommunalSkinnyWarEarEnhancer.class)
                 .build(CommunalSkinnyWarEarEnhancerFactory.class));

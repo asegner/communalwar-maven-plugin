@@ -93,6 +93,9 @@ the standard maven command shown below. This will install the plugin into your l
 * `forceAspectJLibToEar`
   * `true` | `false` (default: `true`)
   * Add AspectJ related libraries to the ear libraries list below
+* `addToManifestClasspath`
+  * `true` | `false` (default: `false`)
+  * Inserts references to the shared libraries into the beginning of the MANIFEST.MF Class-Path attribute
 * `earLibraries`
   * List of libraries that must be relocated to the EAR, if found (rarely needed)
 ```xml

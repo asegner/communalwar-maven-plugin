@@ -26,6 +26,8 @@ public class EarLayoutEnhancerMojo extends AbstractMojo {
      */
     @Parameter(alias = "communalWar")
     protected String communalModuleName;
+    @Parameter(defaultValue = "false")
+    protected Boolean addToManifestClasspath;
     @Parameter(defaultValue = "true")
     protected Boolean forceAspectJLibToEar;
     @Parameter(defaultValue = "true")
@@ -41,7 +43,7 @@ public class EarLayoutEnhancerMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        Injector injector = Guice.createInjector(new EarLayoutEnhancerModule(communalModuleName, earLibraryList, pinnedLibraryList, forceAspectJLibToEar, generateWeblogicLtwMetadata, warningBreaksBuild, build));
+        Injector injector = Guice.createInjector(new EarLayoutEnhancerModule(communalModuleName, earLibraryList, pinnedLibraryList, forceAspectJLibToEar, generateWeblogicLtwMetadata, warningBreaksBuild, build, addToManifestClasspath));
         EarLayoutEnhancer plugin = injector.getInstance(EarLayoutEnhancer.class);
         plugin.start();
     }

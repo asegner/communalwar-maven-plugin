@@ -29,6 +29,10 @@ public abstract class SkinnyWarEarEnhancer extends AbstractEnhancer<EarModule> i
     @Named("warningBreaksBuild")
     private Boolean warningBreaksBuild;
 
+    @Inject
+    @Named("addToManifestClasspath")
+    private Boolean addToManifestClasspath;
+
     public static final String MSGDEBUG_COMMUNAL_LIBRARY = " * skinny: ";
     public static final String MSGDEBUG_SINGLE_LIBRARY = "individual: ";
     public static final String MSGDEBUG_PINNED_LIBRARY = "pinned: ";
@@ -71,27 +75,29 @@ public abstract class SkinnyWarEarEnhancer extends AbstractEnhancer<EarModule> i
 
         // build list of jars in shared module
         // go through each module and add list to manifest class-path
-        Path moduleRootPath = getTargetModule().getModuleRoot().toPath();
-        List<String> sharedLibList = sharedModule.getLibraryFiles()
-                .stream()
-                .map(file -> {
-                    return moduleRootPath.relativize(file.toPath()).toString();
-                })
-                .collect(Collectors.toList());
-        earModules.forEach((name, module) -> {
-            Manifest manifest = null;
-            try {
-                logger.debug("Updating module manifest: " + module.getName());
-                manifest = module.getManifest();
-                List<String> classpath = parseClassPathAttribute(manifest);
-                classpath.addAll(0, sharedLibList);
-                manifest.getMainAttributes().put(ATTR_CLASSPATH, StringUtils.join(classpath, " "));
-                module.saveManifest(manifest);
-            } catch (IOException e) {
-                String msg = "Failed to write manifest for " + module.getName();
-                logger.warn(msg); //TODO respect warningBreaksBuild flag
-            }
-        });
+        if (addToManifestClasspath) {
+            Path moduleRootPath = getTargetModule().getModuleRoot().toPath();
+            List<String> sharedLibList = sharedModule.getLibraryFiles()
+                    .stream()
+                    .map(file -> {
+                        return moduleRootPath.relativize(file.toPath()).toString();
+                    })
+                    .collect(Collectors.toList());
+            earModules.forEach((name, module) -> {
+                Manifest manifest = null;
+                try {
+                    logger.info("Updating module manifest: " + module.getName());
+                    manifest = module.getManifest();
+                    List<String> classpath = parseClassPathAttribute(manifest);
+                    classpath.addAll(0, sharedLibList);
+                    manifest.getMainAttributes().put(ATTR_CLASSPATH, StringUtils.join(classpath, " "));
+                    module.saveManifest(manifest);
+                } catch (IOException e) {
+                    String msg = "Failed to write manifest for " + module.getName();
+                    logger.warn(msg); //TODO respect warningBreaksBuild flag
+                }
+            });
+        }
     }
 
     private List<String> parseClassPathAttribute(Manifest manifest) {
