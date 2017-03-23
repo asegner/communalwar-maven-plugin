@@ -51,8 +51,17 @@ public class EarModule extends GenericApplicationModule {
         return Collections.unmodifiableMap(moduleNameToModuleMap);
     }
 
+    /**
+     * tests folders for inclusion into the module list.
+     *
+     * @param file file/folder under test for inclusion
+     * @return false if filename ends with any value in EAR_METADATA_FILELIST or the ear's library location, true otherwise
+     *
+     */
     protected boolean isEarMetadata(TFile file) {
-        return StringUtils.endsWithAny(FilenameUtils.getName(file.getPath().toLowerCase()), EAR_METADATA_FILELIST);
+        String filename = FilenameUtils.getName(file.getPath().toLowerCase());
+        String libFilename = FilenameUtils.getName(getLibrary().getPath().toLowerCase());
+        return StringUtils.endsWithAny(filename, EAR_METADATA_FILELIST) || StringUtils.endsWithAny(filename, libFilename);
     }
 
     private void createModuleMap() throws IOException {

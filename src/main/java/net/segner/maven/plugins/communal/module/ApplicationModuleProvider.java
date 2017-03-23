@@ -60,7 +60,7 @@ public class ApplicationModuleProvider {
     }
 
     private <T extends GenericApplicationModule> T checkModulePermissions(GenericApplicationModule module) {
-        Validate.notNull(module);
+        Validate.notNull(module, "ApplicationModuleProvider passed a null module");
         Validate.isTrue(module.canRead(), "Unable to read module");
         Validate.isTrue(module.canWrite(), "Unable to write module");
         return (T) module;
