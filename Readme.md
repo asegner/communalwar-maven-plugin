@@ -100,7 +100,8 @@ the standard maven command shown below. This will install the plugin into your l
   * List of libraries that must be relocated to the EAR, if found (rarely needed)
 ```xml
 <earLibraries>
-    <libraryPrefixFilter>spring-webmvc spring-web-</libraryPrefixFilter>
+    <libraryPrefixFilter>spring-webmvc</libraryPrefixFilter>
+    <libraryPrefixFilter>spring-web-</libraryPrefixFilter>
 </earLibraries>
 ```
 * `pinnedLibraries`
