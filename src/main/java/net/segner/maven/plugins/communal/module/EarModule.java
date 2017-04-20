@@ -1,11 +1,10 @@
 package net.segner.maven.plugins.communal.module;
 
+import lombok.extern.slf4j.Slf4j;
 import net.java.truevfs.access.TFile;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -17,8 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class EarModule extends GenericApplicationModule {
-    private static final Logger logger = LoggerFactory.getLogger(EarModule.class);
 
     public static final String MSGINFO_FOUND_MODULE = "Found module: ";
     public static final String MSGINFO_SKIPPING_EAR_FOLDER_ENTRY = "Skipping ear entry: ";
@@ -56,7 +55,6 @@ public class EarModule extends GenericApplicationModule {
      *
      * @param file file/folder under test for inclusion
      * @return false if filename ends with any value in EAR_METADATA_FILELIST or the ear's library location, true otherwise
-     *
      */
     protected boolean isEarMetadata(TFile file) {
         String filename = FilenameUtils.getName(file.getPath().toLowerCase());
@@ -92,11 +90,11 @@ public class EarModule extends GenericApplicationModule {
                 GenericApplicationModule gam = applicationModuleProvider.get(moduleReference, this);
                 moduleNameToModuleMap.put(gam.getName(), gam);
 
-                if (logger.isInfoEnabled()) {
-                    logger.info(MSGINFO_FOUND_MODULE + gam.getName() + (unpacked ? MSGINFO_UNPACKED : StringUtils.EMPTY));
+                if (log.isInfoEnabled()) {
+                    log.info(MSGINFO_FOUND_MODULE + gam.getName() + (unpacked ? MSGINFO_UNPACKED : StringUtils.EMPTY));
                 }
             } catch (IllegalArgumentException | IllegalModuleException ex) {
-                logger.warn(MSGINFO_SKIPPING_EAR_FOLDER_ENTRY + moduleReference.getName());
+                log.warn(MSGINFO_SKIPPING_EAR_FOLDER_ENTRY + moduleReference.getName());
             }
         }
     }

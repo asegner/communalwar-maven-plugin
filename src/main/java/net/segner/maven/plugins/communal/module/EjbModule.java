@@ -1,16 +1,18 @@
 package net.segner.maven.plugins.communal.module;
 
+import lombok.extern.slf4j.Slf4j;
 import net.java.truevfs.access.TFile;
 
-public class RarModule extends GenericApplicationModule implements ApplicationModule {
+@Slf4j
+public class EjbModule extends GenericApplicationModule implements ApplicationModule {
 
     public static final String DEFAULT_WEBMODULE_LIBPATH = "";
-    public static final String EXTENSION = "rar";
+    public static final String EXTENSION = "jar";
 
-    RarModule() {
+    EjbModule() {
     }
 
-    public RarModule(TFile archivePath) {
+    public EjbModule(TFile archivePath) {
         super(archivePath);
     }
 

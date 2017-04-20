@@ -14,7 +14,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class WeblogicClassloaderStructure {
     public static final String TAG_CLASSLOADER_STRUCTURE = "classloader-structure";
@@ -63,7 +65,7 @@ public class WeblogicClassloaderStructure {
             clssStructureRoot.getParentNode().appendChild(newParentClStructure);
             if (hasElementChildNode(clssStructureRoot)) {
                 newParentClStructure.appendChild(clssStructureRoot);
-            }else{
+            } else {
                 clssStructureRoot.getParentNode().removeChild(clssStructureRoot);
             }
         } else {
@@ -101,20 +103,25 @@ public class WeblogicClassloaderStructure {
     }
 
     @Nonnull
-    private Element generateModuleClassloaderStructure(String moduleName) throws SAXException, IOException, ParserConfigurationException {
+    private Element generateModuleClassloaderStructure(String... moduleNameList) throws SAXException, IOException, ParserConfigurationException {
         Document document = applicationXml.getDocument();
-        Element moduleUri = document.createElement(TAG_MODULE_URI);
-        Element moduleRef = document.createElement(TAG_MODULE_REF);
         Element classloader = document.createElement(TAG_CLASSLOADER_STRUCTURE);
 
-        moduleUri.setTextContent(moduleName);
-        moduleRef.appendChild(moduleUri);
-        classloader.appendChild(moduleRef);
+        Arrays.stream(moduleNameList).forEachOrdered(moduleName -> {
+            Element moduleUri = document.createElement(TAG_MODULE_URI);
+            Element moduleRef = document.createElement(TAG_MODULE_REF);
+
+            moduleUri.setTextContent(moduleName);
+            moduleRef.appendChild(moduleUri);
+
+            classloader.appendChild(moduleRef);
+        });
+
 
         return classloader;
     }
 
-    public void verifyModulesExist(Element classloaderStructureParent, List<ApplicationModule> standardModules) throws SAXException, IOException, ParserConfigurationException {
+    public void appendModulesNotPresent(Element classloaderStructureParent, List<ApplicationModule> standardModules) throws SAXException, IOException, ParserConfigurationException {
         for (ApplicationModule applicationModule : standardModules) {
             String moduleName = applicationModule.getName();
             Node ref = findModuleRef(moduleName);
@@ -123,5 +130,32 @@ public class WeblogicClassloaderStructure {
                 classloaderStructureParent.appendChild(moduleStructure);
             }
         }
+    }
+
+    /**
+     * Adds ejb modules as intermediates in the classloader chain
+     *
+     * @return an element that should now be considered the parent for the remaining modules
+     */
+    @Nonnull
+    public Element appendEjbModulesNotPresent(@Nonnull Element parent, @Nonnull List<ApplicationModule> ejbModuleList) throws SAXException, IOException, ParserConfigurationException {
+
+        // filter out modules already explicitly defined in the classloader structure
+        List<ApplicationModule> notPresentModuleList = ejbModuleList.stream()
+                .filter(applicationModule -> {
+                    try {
+                        return findModuleRef(applicationModule.getName()) == null;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toList());
+        if (notPresentModuleList.isEmpty()) return parent;
+
+        // create classloader layer for ejbs
+        List<String> notPresentModuleNameList = notPresentModuleList.stream().map(applicationModule -> applicationModule.getName()).collect(Collectors.toList());
+        Element ejbModuleStructure = generateModuleClassloaderStructure(notPresentModuleNameList.toArray(new String[0]));
+        parent.appendChild(ejbModuleStructure);
+        return ejbModuleStructure;
     }
 }

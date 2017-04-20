@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
+import lombok.extern.slf4j.Slf4j;
 import net.segner.maven.plugins.communal.enhancer.CommunalSkinnyWarEarEnhancer;
 import net.segner.maven.plugins.communal.enhancer.CommunalSkinnyWarEarEnhancerFactory;
 import net.segner.maven.plugins.communal.enhancer.ModuleEnhancer;
@@ -15,16 +16,14 @@ import net.segner.maven.plugins.communal.module.ApplicationModuleProvider;
 import net.segner.maven.plugins.communal.module.EarModule;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Build;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 public class EarLayoutEnhancerModule extends AbstractModule {
-    private static final Logger logger = LoggerFactory.getLogger(EarLayoutEnhancerModule.class);
     public static final List<String> ASPECTJLIBRARIES = Arrays.asList(StringUtils.split("aopalliance aspectjweaver aspectjrt"));
 
     private String communalModuleName;

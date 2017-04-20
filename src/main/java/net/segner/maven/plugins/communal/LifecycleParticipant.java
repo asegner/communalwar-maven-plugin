@@ -1,5 +1,6 @@
 package net.segner.maven.plugins.communal;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
@@ -9,8 +10,6 @@ import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginContainer;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.project.MavenProject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
@@ -18,8 +17,8 @@ import javax.inject.Singleton;
 
 @Named("net.segner.maven.plugins.communal.LifecycleParticipant")
 @Singleton
+@Slf4j
 public class LifecycleParticipant extends AbstractMavenLifecycleParticipant {
-    private static final Logger logger = LoggerFactory.getLogger(LifecycleParticipant.class);
 
     public static final String _THIS_GROUP_ID = "net.segner.maven.plugins";
     public static final String _THIS_ARTIFACT_ID = "skinnywar-maven-plugin";
@@ -27,7 +26,7 @@ public class LifecycleParticipant extends AbstractMavenLifecycleParticipant {
 
     public void afterProjectsRead(final MavenSession session) throws MavenExecutionException {
         try {
-            logger.info("Ensuring skinnywar execution in build ");
+            log.info("Ensuring skinnywar execution in build ");
             for (MavenProject project : session.getProjects()) {
                 final Plugin mavenPlugin = getBuildPlugin(project.getModel());
                 if (mavenPlugin != null) {

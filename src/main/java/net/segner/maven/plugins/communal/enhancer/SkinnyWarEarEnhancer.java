@@ -1,14 +1,13 @@
 package net.segner.maven.plugins.communal.enhancer;
 
 import com.google.inject.name.Named;
+import lombok.extern.slf4j.Slf4j;
 import net.java.truevfs.access.TFile;
 import net.segner.maven.plugins.communal.LibraryFilter;
 import net.segner.maven.plugins.communal.module.ApplicationModule;
 import net.segner.maven.plugins.communal.module.EarModule;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -22,8 +21,8 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
+@Slf4j
 public abstract class SkinnyWarEarEnhancer extends AbstractEnhancer<EarModule> implements ModuleEnhancer<EarModule> {
-    private static final Logger logger = LoggerFactory.getLogger(SkinnyWarEarEnhancer.class);
 
     @Inject
     @Named("warningBreaksBuild")
@@ -86,15 +85,14 @@ public abstract class SkinnyWarEarEnhancer extends AbstractEnhancer<EarModule> i
             earModules.forEach((name, module) -> {
                 Manifest manifest = null;
                 try {
-                    logger.info("Updating module manifest: " + module.getName());
+                    log.info("Updating module manifest: {}", module.getName());
                     manifest = module.getManifest();
                     List<String> classpath = parseClassPathAttribute(manifest);
                     classpath.addAll(0, sharedLibList);
                     manifest.getMainAttributes().put(ATTR_CLASSPATH, StringUtils.join(classpath, " "));
                     module.saveManifest(manifest);
                 } catch (IOException e) {
-                    String msg = "Failed to write manifest for " + module.getName();
-                    logger.warn(msg); //TODO respect warningBreaksBuild flag
+                    log.warn("Failed to write manifest for {}", module.getName()); //TODO respect warningBreaksBuild flag
                 }
             });
         }
@@ -128,17 +126,17 @@ public abstract class SkinnyWarEarEnhancer extends AbstractEnhancer<EarModule> i
 
         try {
             if (isPinnedLibrary(jarName)) { // pinned library, do not move
-                moduleList.forEach(war -> logger.debug(MSGDEBUG_PINNED_LIBRARY + jarName + " [" + war.getName() + "]"));
+                moduleList.forEach(war -> log.debug(MSGDEBUG_PINNED_LIBRARY + jarName + " [" + war.getName() + "]"));
 
             } else if (isEarLibrary(jarName)) { // ear library
-                logger.debug(MSGDEBUG_EAR_LIBRARY + jarName);
+                log.debug(MSGDEBUG_EAR_LIBRARY + jarName);
                 getTargetModule().addLib(new TFile(moduleList.get(0).getLibrary(), jarName));
                 for (ApplicationModule webmodule : moduleList) {
                     webmodule.removeLib(jarName);
                 }
 
             } else if (moduleList.size() > 1) { // purgable library (shared)
-                logger.debug(MSGDEBUG_COMMUNAL_LIBRARY + jarName);
+                log.debug(MSGDEBUG_COMMUNAL_LIBRARY + jarName);
                 List<ApplicationModule> copyManifest = new ArrayList<>(moduleList);
                 boolean inCommunal = copyManifest.remove(sharedModule);
                 if (!inCommunal) {
@@ -149,7 +147,7 @@ public abstract class SkinnyWarEarEnhancer extends AbstractEnhancer<EarModule> i
                 }
 
             } else if (moduleList.size() == 1) { // war library
-                logger.debug(MSGDEBUG_SINGLE_LIBRARY + jarName + " [" + moduleList.get(0).getName() + "]");
+                log.debug("{}{} [{}]", MSGDEBUG_SINGLE_LIBRARY, jarName, moduleList.get(0).getName());
             }
 
         } catch (Exception ex) {

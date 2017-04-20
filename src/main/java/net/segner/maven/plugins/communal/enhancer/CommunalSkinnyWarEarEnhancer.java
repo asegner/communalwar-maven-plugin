@@ -2,14 +2,13 @@ package net.segner.maven.plugins.communal.enhancer;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import lombok.extern.slf4j.Slf4j;
 import net.segner.maven.plugins.communal.module.EarModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+@Slf4j
 public class CommunalSkinnyWarEarEnhancer extends SkinnyWarEarEnhancer implements ModuleEnhancer<EarModule> {
-    private static final Logger logger = LoggerFactory.getLogger(CommunalSkinnyWarEarEnhancer.class);
 
     public static final String MSGINFO_CREATING_SKINNY_WARS = "Enhancing EAR with Communal Skinny WAR layout";
 
@@ -20,9 +19,9 @@ public class CommunalSkinnyWarEarEnhancer extends SkinnyWarEarEnhancer implement
 
     @Override
     public void enhance() throws IOException {
-        logger.info(MSGINFO_CREATING_SKINNY_WARS);
+        log.info(MSGINFO_CREATING_SKINNY_WARS);
         makeSkinnyModules();
-        logger.info(MSGINFO_SUCCESS);
+        log.info(MSGINFO_SUCCESS);
     }
 
     public void setCommunalModule(String communalModule) {

@@ -1,6 +1,7 @@
 package net.segner.maven.plugins.communal;
 
 import com.google.inject.name.Named;
+import lombok.extern.slf4j.Slf4j;
 import net.java.truevfs.access.TVFS;
 import net.java.truevfs.kernel.spec.FsSyncException;
 import net.segner.maven.plugins.communal.enhancer.ModuleEnhancer;
@@ -8,13 +9,11 @@ import net.segner.maven.plugins.communal.module.EarModule;
 import org.apache.commons.lang3.Validate;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
+@Slf4j
 public class EarLayoutEnhancer {
-    private static final Logger logger = LoggerFactory.getLogger(EarLayoutEnhancer.class);
 
     @Inject
     private EarModule earModule;
@@ -34,7 +33,7 @@ public class EarLayoutEnhancer {
             earModuleEnhancer.enhance();
 
         } catch (IllegalArgumentException ex) {
-            logger.warn(ex.getMessage());
+            log.warn(ex.getMessage());
             if (warningBreaksBuild) {
                 throw new MojoFailureException(ex.getMessage(), ex);
             }

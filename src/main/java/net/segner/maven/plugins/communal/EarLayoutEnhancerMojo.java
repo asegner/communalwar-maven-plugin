@@ -2,6 +2,8 @@ package net.segner.maven.plugins.communal;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.mycila.guice.ext.closeable.CloseableModule;
+import com.mycila.guice.ext.jsr250.Jsr250Module;
 import org.apache.maven.model.Build;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -16,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mojo(name = "ear", defaultPhase = LifecyclePhase.PACKAGE, threadSafe = true, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
-@Description("Enhances the EAR with an alternate layout")
+@Description("Enhances the EAR with communal layout and creates skinny wars")
 public class EarLayoutEnhancerMojo extends AbstractMojo {
 
     /**
@@ -43,7 +45,9 @@ public class EarLayoutEnhancerMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        Injector injector = Guice.createInjector(new EarLayoutEnhancerModule(communalModuleName, earLibraryList, pinnedLibraryList, forceAspectJLibToEar, generateWeblogicLtwMetadata, warningBreaksBuild, build, addToManifestClasspath));
+        Injector injector = Guice.createInjector(
+                new CloseableModule(), new Jsr250Module(),   //supports @PostConstruct of the object lifecycle
+                new EarLayoutEnhancerModule(communalModuleName, earLibraryList, pinnedLibraryList, forceAspectJLibToEar, generateWeblogicLtwMetadata, warningBreaksBuild, build, addToManifestClasspath));
         EarLayoutEnhancer plugin = injector.getInstance(EarLayoutEnhancer.class);
         plugin.start();
     }

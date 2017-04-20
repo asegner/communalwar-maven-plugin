@@ -1,14 +1,14 @@
 package net.segner.maven.plugins.communal.weblogic;
 
+import lombok.extern.slf4j.Slf4j;
 import net.java.truevfs.access.TFile;
 import net.java.truevfs.access.TFileInputStream;
 import net.java.truevfs.access.TFileOutputStream;
 import net.segner.maven.plugins.communal.module.ApplicationModule;
 import net.segner.maven.plugins.communal.module.EarModule;
+import net.segner.maven.plugins.communal.module.EjbModule;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -25,13 +25,11 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-
+@Slf4j
 public class WeblogicApplicationXml {
-    private static final Logger logger = LoggerFactory.getLogger(WeblogicApplicationXml.class);
 
     public static final String TAG_WEBLOGIC_APPLICATION = "weblogic-application";
     public static final String PATH_RELATIVE_WL_APP_FOLDER = "META-INF";
@@ -64,8 +62,11 @@ public class WeblogicApplicationXml {
     }
 
     @Nonnull
-    public WeblogicClassloaderStructure getClassloaderStructure() throws ParserConfigurationException, SAXException, IOException {
-        if (wcs == null) {
+    public WeblogicClassloaderStructure findClassloaderStructure() throws ParserConfigurationException, SAXException, IOException {
+        WeblogicClassloaderStructure weblogicClassloaderStructure = wcs;
+
+        // locate an existing classloader structure
+        if (weblogicClassloaderStructure == null) {
             Element root = getXmlRoot();
             NodeList matches = root.getElementsByTagName(WeblogicClassloaderStructure.TAG_CLASSLOADER_STRUCTURE);
             if (matches != null && matches.getLength() > 0) {
@@ -73,19 +74,22 @@ public class WeblogicApplicationXml {
                     if (matches.item(i).getNodeType() == Node.ELEMENT_NODE) {
                         Element el = (Element) matches.item(i);
                         if (root.equals(el.getParentNode())) {
-                            wcs = new WeblogicClassloaderStructure(this);
+                            weblogicClassloaderStructure = new WeblogicClassloaderStructure(this);
                             break;
                         }
                     }
                 }
             }
         }
-        if (wcs == null) {
+
+        // create a new classloader structure if none exists
+        if (weblogicClassloaderStructure == null) {
             Element newroot = getDocument().createElement(WeblogicClassloaderStructure.TAG_CLASSLOADER_STRUCTURE);
             getXmlRoot().appendChild(newroot);
-            wcs = new WeblogicClassloaderStructure(this);
+            weblogicClassloaderStructure = new WeblogicClassloaderStructure(this);
         }
-        return wcs;
+
+        return weblogicClassloaderStructure;
     }
 
     @Nonnull
@@ -101,10 +105,10 @@ public class WeblogicApplicationXml {
         if (document == null) {
             DocumentBuilder documentFactory = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             if (weblogicappXml.exists()) {
-                logger.info("Found existing weblogic-application.xml, modifying in-place");
+                log.info("Found existing weblogic-application.xml, modifying in-place");
                 document = documentFactory.parse(new TFileInputStream(weblogicappXml));
             } else {
-                logger.info("No existing weblogic-application.xml -- Generating");
+                log.info("No existing weblogic-application.xml -- Generating");
                 document = documentFactory.newDocument();
                 Element wlapp = document.createElement(TAG_WEBLOGIC_APPLICATION);
                 wlapp.setAttribute("xmlns", "http://xmlns.oracle.com/weblogic/weblogic-application");
@@ -118,17 +122,32 @@ public class WeblogicApplicationXml {
     }
 
     public void setupCommunalWeblogicApplicationXml(String sharedModule) throws IOException, SAXException, ParserConfigurationException {
-        getClassloaderStructure();
+        wcs = findClassloaderStructure();
+
+        // remove the communal war from the classloader structure and make it a parent of the classloader structure
         wcs.removeModule(sharedModule);
         Element parent = wcs.makeParentClassloaderStructure(sharedModule);
 
-        // get a list of the current modules without the shared module
-        List<ApplicationModule> fullList = Arrays.asList(earModule.getModules().values().toArray(new ApplicationModule[0]));
-        List<ApplicationModule> standardModuleList = new ArrayList<>(fullList.size());
-        standardModuleList.addAll(fullList);
+        // get a list of the non-ejb modules without the shared module
+        List<ApplicationModule> standardModuleList = earModule.getModules().entrySet().stream()
+                .filter(moduleEntry -> !EjbModule.class.isAssignableFrom(moduleEntry.getValue().getClass()))
+                .map(moduleEntry -> moduleEntry.getValue())
+                .collect(Collectors.toList());
         standardModuleList.removeIf(applicationModule -> StringUtils.equalsIgnoreCase(sharedModule, applicationModule.getName()));
 
-        // pass the module list to the classloaderstructure to verify they exist
-        wcs.verifyModulesExist(parent, standardModuleList);
+
+        // get a list of the ejb modules without the shared module
+        List<ApplicationModule> ejbModuleList = earModule.getModules().entrySet().stream()
+                .filter(moduleEntry -> EjbModule.class.isAssignableFrom(moduleEntry.getValue().getClass()))
+                .map(moduleEntry -> moduleEntry.getValue())
+                .collect(Collectors.toList());
+        standardModuleList.removeIf(applicationModule -> StringUtils.equalsIgnoreCase(sharedModule, applicationModule.getName()));
+
+        // pass the ejb module list to the classloaderstructure to append ones that are not present in the explicitly defined classloader structure
+        // ejbs should be above webmodules in the classloader structure
+        parent = wcs.appendEjbModulesNotPresent(parent, ejbModuleList);
+
+        // pass the web module list to the classloaderstructure to append ones that are not present in the explicitly defined classloader structure
+        wcs.appendModulesNotPresent(parent, standardModuleList);
     }
 }
