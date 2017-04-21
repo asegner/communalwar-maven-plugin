@@ -19,6 +19,7 @@ import org.w3c.dom.ls.LSSerializer;
 import org.xml.sax.SAXException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -61,7 +62,7 @@ public class WeblogicApplicationXml {
         earModule.copy(weblogicappXml, PATH_RELATIVE_WL_APP_FOLDER);
     }
 
-    @Nonnull
+    @Nullable
     public WeblogicClassloaderStructure findClassloaderStructure() throws ParserConfigurationException, SAXException, IOException {
         WeblogicClassloaderStructure weblogicClassloaderStructure = wcs;
 
@@ -81,15 +82,15 @@ public class WeblogicApplicationXml {
                 }
             }
         }
-
-        // create a new classloader structure if none exists
-        if (weblogicClassloaderStructure == null) {
-            Element newroot = getDocument().createElement(WeblogicClassloaderStructure.TAG_CLASSLOADER_STRUCTURE);
-            getXmlRoot().appendChild(newroot);
-            weblogicClassloaderStructure = new WeblogicClassloaderStructure(this);
-        }
-
         return weblogicClassloaderStructure;
+    }
+
+    @Nonnull
+    public WeblogicClassloaderStructure createClassloaderStructure() throws IOException, SAXException, ParserConfigurationException {
+        // create a new classloader structure
+        Element newroot = getDocument().createElement(WeblogicClassloaderStructure.TAG_CLASSLOADER_STRUCTURE);
+        getXmlRoot().appendChild(newroot);
+        return new WeblogicClassloaderStructure(this);
     }
 
     @Nonnull
@@ -123,6 +124,7 @@ public class WeblogicApplicationXml {
 
     public void setupCommunalWeblogicApplicationXml(String sharedModule) throws IOException, SAXException, ParserConfigurationException {
         wcs = findClassloaderStructure();
+        wcs = (wcs == null) ? createClassloaderStructure() : wcs;
 
         // remove the communal war from the classloader structure and make it a parent of the classloader structure
         wcs.removeModule(sharedModule);
