@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Pushes changes to two filesystems
+ * {@inheritDoc}
  */
 public class GenericMirroringFilesystem implements MirroringFilesystem {
 
@@ -37,12 +37,18 @@ public class GenericMirroringFilesystem implements MirroringFilesystem {
         this.slave = slave;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TFile[] listFiles() {
         TFile[] files = master.listFiles();
         return (files == null) ? new TFile[0] : files;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TFile[] listFiles(FileFilter filter) {
         TFile[] files = master.listFiles(filter);
@@ -54,16 +60,25 @@ public class GenericMirroringFilesystem implements MirroringFilesystem {
         return Pair.of(master, slave);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean canRead() {
         return master.canRead() && (slave == null || !slave.exists() || slave.canRead());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean canWrite() {
         return master.canWrite() && (slave == null || !slave.exists() || slave.canWrite());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void rm(String relativePath) throws IOException {
         for (TFile target : targetList()) {
@@ -72,6 +87,9 @@ public class GenericMirroringFilesystem implements MirroringFilesystem {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void copy(TFile file, TFile destination) throws IOException {
         if (master.isParentOf(destination)) {
@@ -83,6 +101,9 @@ public class GenericMirroringFilesystem implements MirroringFilesystem {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void copy(TFile file, String relativeFolderDestination) throws IOException {
         for (TFile target : targetList()) {

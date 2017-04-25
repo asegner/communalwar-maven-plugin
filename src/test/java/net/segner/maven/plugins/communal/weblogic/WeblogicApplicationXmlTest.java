@@ -42,7 +42,7 @@ public class WeblogicApplicationXmlTest {
         WeblogicClassloaderStructure classloaderStructure = weblogicApplicationXml.createClassloaderStructure();
 
         // validate
-        assertThat("Create classloader created something",
+        assertThat("Create classloader structure created something",
                 classloaderStructure, notNullValue(WeblogicClassloaderStructure.class));
         assertThat("Classloader structure has a relationship with provided weblogicApplicationXml",
                 Whitebox.getInternalState(classloaderStructure, "applicationXml"), is(weblogicApplicationXml));
