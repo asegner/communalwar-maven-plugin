@@ -106,7 +106,12 @@ public class WeblogicClassloaderStructure {
     private Element generateModuleClassloaderStructure(String... moduleNameList) throws SAXException, IOException, ParserConfigurationException {
         Document document = applicationXml.getDocument();
         Element classloader = document.createElement(TAG_CLASSLOADER_STRUCTURE);
+        return generateModuleRefListAndAppendToClassloader( classloader, moduleNameList );
+    }
 
+    @Nonnull
+    private Element generateModuleRefListAndAppendToClassloader( Element classloader, String... moduleNameList ) throws IOException, SAXException, ParserConfigurationException {
+        Document document = applicationXml.getDocument();
         Arrays.stream(moduleNameList).forEachOrdered(moduleName -> {
             Element moduleUri = document.createElement(TAG_MODULE_URI);
             Element moduleRef = document.createElement(TAG_MODULE_REF);
@@ -116,8 +121,6 @@ public class WeblogicClassloaderStructure {
 
             classloader.appendChild(moduleRef);
         });
-
-
         return classloader;
     }
 
@@ -154,8 +157,6 @@ public class WeblogicClassloaderStructure {
 
         // create classloader layer for ejbs
         List<String> notPresentModuleNameList = notPresentModuleList.stream().map(applicationModule -> applicationModule.getName()).collect(Collectors.toList());
-        Element ejbModuleStructure = generateModuleClassloaderStructure(notPresentModuleNameList.toArray(new String[0]));
-        parent.appendChild(ejbModuleStructure);
-        return ejbModuleStructure;
+        return generateModuleRefListAndAppendToClassloader(parent, notPresentModuleNameList.toArray(new String[0]));
     }
 }
