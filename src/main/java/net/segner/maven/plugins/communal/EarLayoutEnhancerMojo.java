@@ -46,7 +46,7 @@ public class EarLayoutEnhancerMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         Injector injector = Guice.createInjector(
-                new CloseableModule(), new Jsr250Module(),   //supports @PostConstruct of the object lifecycle
+                new CloseableModule(), new Jsr250Module(),   //supports the object lifecycle, in our case @PostConstruct
                 new EarLayoutEnhancerModule(communalModuleName, earLibraryList, pinnedLibraryList, forceAspectJLibToEar, generateWeblogicLtwMetadata, warningBreaksBuild, build, addToManifestClasspath));
         EarLayoutEnhancer plugin = injector.getInstance(EarLayoutEnhancer.class);
         plugin.start();

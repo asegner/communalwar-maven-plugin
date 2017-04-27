@@ -54,11 +54,43 @@ Without setting extension to true, the plugin may still be used with the slightl
 ```
 
 
+## Using EJB
+--------------------------------------------------
+
+When using EJBs in an application, some extra configuration must be added to your pom files to have the dependencies pushed
+to their correct locations for communal load time weaving
+
+For each EJB:
+1. the EJB dependency scope must be marked ```provided``` in the EAR level pom
+    ```xml
+        <dependencies>
+        ...
+            <dependency>
+                <groupId>net.segner.poc.ejb</groupId>
+                <artifactId>net-segner-poc-service</artifactId>
+                <type>ejb</type>
+                <scope>provided</scope>
+            </dependency>
+        </dependencies>
+    ```
+1. the EJB dependency with type ```pom``` must be added as a dependency of the Communal WAR
+    ```xml
+        <dependencies>
+        ...
+            <dependency>
+                <groupId>net.segner.poc.ejb</groupId>
+                <artifactId>net-segner-poc-service</artifactId>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    ```
+
+
 ## Installing Plugin Locally
 --------------------------------------------------
 
-This plugin requires a minimum maven version of 3.3.x. This plugin is currently in the snapshot repositories and will soon be promoted to the central repository.
-Before that time, the plugin can be downloaded by adding the snapshot repository to the project pom
+This plugin requires a minimum maven version of 3.3.3. 
+To use snapshot versions of the plugin, the snapshot repository should be added to the project pom
 
 ```xml
     <pluginRepositories>
